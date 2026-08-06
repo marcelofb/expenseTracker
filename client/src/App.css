@@ -1,0 +1,186 @@
+:root {
+  --bg: #f7f7fb;
+  --panel: #ffffff;
+  --ink: #111827;
+  --subtle: #6b7280;
+  --primary: #0f766e;
+  --primary-soft: #ccfbf1;
+  --danger: #b91c1c;
+  --border: #e5e7eb;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.header h1 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.header p {
+  margin: 8px 0 0;
+  color: var(--subtle);
+}
+
+h2 {
+  margin-top: 0;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  font: inherit;
+}
+
+input,
+select {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+button {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #334155;
+}
+
+button.danger {
+  background: var(--danger);
+}
+
+button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.big {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.list-header {
+  display: grid;
+  gap: 10px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  background: var(--primary-soft);
+  color: #115e59;
+  border: 1px solid #99f6e4;
+}
+
+.chip.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.expense-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.expense-item {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.expense-description {
+  margin: 0;
+  font-weight: 700;
+}
+
+.expense-meta {
+  margin: 4px 0 0;
+  color: var(--subtle);
+  font-size: 0.92rem;
+}
+
+.right-col {
+  text-align: right;
+}
+
+.row-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.empty {
+  margin: 0;
+  color: var(--subtle);
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 14px;
+  }
+
+  .expense-item {
+    flex-direction: column;
+  }
+
+  .right-col {
+    text-align: left;
+  }
+
+  .row-actions {
+    justify-content: flex-start;
+  }
+}
