@@ -7,7 +7,7 @@ function toToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit }) {
+export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, disabled = false }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [expenseDate, setExpenseDate] = useState(toToday());
@@ -85,6 +85,8 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit }) {
     }
   }
 
+  const formDisabled = loading || disabled;
+
   return (
     <form className="panel form" onSubmit={handleSubmit}>
       <h2>{isEdit ? 'Editar gasto' : 'Registrar gasto'}</h2>
@@ -96,6 +98,7 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit }) {
           onChange={(event) => setDescription(event.target.value)}
           placeholder="Ej: Supermercado"
           maxLength={120}
+          disabled={formDisabled}
           required
         />
       </label>
@@ -109,6 +112,7 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit }) {
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
           placeholder="0.00"
+          disabled={formDisabled}
           required
         />
       </label>
@@ -120,13 +124,14 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit }) {
           value={expenseDate}
           onChange={(event) => setExpenseDate(event.target.value)}
           max={toToday()}
+          disabled={formDisabled}
           required
         />
       </label>
 
       <label>
         Persona
-        <select value={person} onChange={(event) => setPerson(event.target.value)}>
+        <select value={person} onChange={(event) => setPerson(event.target.value)} disabled={formDisabled}>
           {PERSONS.map((item) => (
             <option key={item} value={item}>
               {item}
@@ -138,12 +143,12 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit }) {
       {error ? <p className="error">{error}</p> : null}
 
       <div className="actions">
-        <button type="submit" disabled={loading}>
+        <button type="submit" disabled={formDisabled}>
           {loading ? 'Guardando...' : isEdit ? 'Actualizar gasto' : 'Guardar gasto'}
         </button>
 
         {isEdit ? (
-          <button type="button" className="secondary" onClick={onCancelEdit} disabled={loading}>
+          <button type="button" className="secondary" onClick={onCancelEdit} disabled={formDisabled}>
             Cancelar
           </button>
         ) : null}
