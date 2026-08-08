@@ -131,7 +131,7 @@ router.get('/', async (req, res) => {
 
   try {
     const { rows } = await pool.query(
-      `SELECT id, description, amount::float8 AS amount, expense_date, person, created_at, updated_at
+      `SELECT id, description, amount::float8 AS amount, expense_date::text AS expense_date, person, created_at, updated_at
        FROM expenses
        WHERE expense_date >= $1 AND expense_date < $2
        ORDER BY expense_date DESC, created_at DESC;`
@@ -163,7 +163,7 @@ router.post('/', async (req, res) => {
     const { rows } = await pool.query(
       `INSERT INTO expenses (description, amount, expense_date, person)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, description, amount::float8 AS amount, expense_date, person, created_at, updated_at;`,
+       RETURNING id, description, amount::float8 AS amount, expense_date::text AS expense_date, person, created_at, updated_at;`,
       [payload.description, payload.amount, payload.expense_date, payload.person]
     );
 
@@ -192,7 +192,7 @@ router.put('/:id', async (req, res) => {
       `UPDATE expenses
        SET description = $1, amount = $2, expense_date = $3, person = $4
        WHERE id = $5
-       RETURNING id, description, amount::float8 AS amount, expense_date, person, created_at, updated_at;`,
+       RETURNING id, description, amount::float8 AS amount, expense_date::text AS expense_date, person, created_at, updated_at;`,
       [payload.description, payload.amount, payload.expense_date, payload.person, req.params.id]
     );
 

@@ -7,6 +7,26 @@ function formatArs(value) {
   }).format(value || 0);
 }
 
+function normalizeDate(value) {
+  if (!value) return '';
+  return String(value).split('T')[0];
+}
+
+function formatDateAr(value) {
+  const normalized = normalizeDate(value);
+  const parts = normalized.split('-');
+  if (parts.length !== 3) return normalized;
+  const [year, month, day] = parts;
+  return `${day}-${month}-${year}`;
+}
+
+function formatPeriodLabel(period) {
+  if (!period) return '';
+  const [year, month] = String(period).split('-');
+  if (!year || !month) return period;
+  return `${month}-${year}`;
+}
+
 export default function ExpenseList({
   expenses,
   selectedPerson,
@@ -22,7 +42,7 @@ export default function ExpenseList({
   return (
     <section className="panel">
       <div className="list-header">
-        <h2>Gastos del periodo {period}</h2>
+        <h2>Gastos del periodo {formatPeriodLabel(period)}</h2>
         <div className="chips">
           {PERSONS.map((person) => (
             <button
@@ -46,7 +66,7 @@ export default function ExpenseList({
               <div>
                 <p className="expense-description">{expense.description}</p>
                 <p className="expense-meta">
-                  {expense.person} - {expense.expense_date}
+                  {formatDateAr(expense.expense_date)} - {expense.person}
                 </p>
               </div>
 

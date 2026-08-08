@@ -32,6 +32,12 @@ function buildMonth(year, month) {
   return `${year}-${month}`;
 }
 
+function formatPeriodLabel(period) {
+  if (!period || !/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return period || '';
+  const [year, month] = period.split('-');
+  return `${month}-${year}`;
+}
+
 function getMonthOptions() {
   return [
     { value: '01', label: 'Enero' },
@@ -201,7 +207,7 @@ export default function App() {
             <div className="period-header">
               <div>
                 <p className="period-label">Viendo periodo</p>
-                <p className="period-value">{resolvedPeriod}</p>
+                <p className="period-value">{formatPeriodLabel(resolvedPeriod)}</p>
               </div>
 
               <button
@@ -222,22 +228,6 @@ export default function App() {
 
             <div className="period-actions">
               <label>
-                Año
-                <select
-                  value={draftYear}
-                  onChange={(event) => {
-                    setDraftYear(event.target.value);
-                  }}
-                  disabled={loading || periodLoading}
-                >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
                 Mes
                 <select
                   value={draftMonth}
@@ -249,6 +239,22 @@ export default function App() {
                   {monthOptions.map((month) => (
                     <option key={month.value} value={month.value}>
                       {month.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Año
+                <select
+                  value={draftYear}
+                  onChange={(event) => {
+                    setDraftYear(event.target.value);
+                  }}
+                  disabled={loading || periodLoading}
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
                     </option>
                   ))}
                 </select>
