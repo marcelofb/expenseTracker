@@ -35,6 +35,14 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, dis
 
   const isEdit = useMemo(() => Boolean(editingExpense?.id), [editingExpense]);
 
+  function resetForm() {
+    setDescription('');
+    setAmount('');
+    setExpenseDate(toToday());
+    setPerson(PERSONS[0]);
+    setError('');
+  }
+
   useEffect(() => {
     if (editingExpense) {
       setDescription(editingExpense.description || '');
@@ -44,10 +52,7 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, dis
       return;
     }
 
-    setDescription('');
-    setAmount('');
-    setExpenseDate(toToday());
-    setPerson(PERSONS[0]);
+    resetForm();
   }, [editingExpense]);
 
   async function handleSubmit(event) {
@@ -95,7 +100,8 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, dis
       } else {
         await createExpense(payload);
       }
-      onSaved();
+      resetForm();
+      await onSaved();
     } catch (submitError) {
       setError(submitError.message || 'No se pudo guardar el gasto.');
     } finally {
