@@ -117,10 +117,15 @@
 }
 
 .period-bar {
+  display: grid;
+  gap: 14px;
+}
+
+.period-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 14px;
+  gap: 10px;
 }
 
 .period-label {
@@ -286,9 +291,9 @@ button:disabled {
     padding: 14px;
   }
 
-  .period-bar {
-    flex-direction: column;
+  .period-header {
     align-items: stretch;
+    flex-direction: column;
   }
 
   .period-actions {

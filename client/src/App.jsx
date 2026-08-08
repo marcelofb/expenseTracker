@@ -168,12 +168,11 @@ export default function App() {
     }
   }
 
-  const isCurrentMonth = useMemo(() => selectedMonth === currentMonth(), [selectedMonth]);
   const monthOptions = useMemo(() => getMonthOptions(), []);
   const yearOptions = useMemo(() => getYearOptions(), []);
   const draftPeriod = buildMonth(draftYear, draftMonth);
   const hasPendingSelection = draftPeriod && draftPeriod !== selectedMonth;
-  const isShowingCurrentSelection = draftPeriod === currentMonth();
+  const isViewingCurrentPeriod = resolvedPeriod === currentMonth();
 
   return (
     <main className="container">
@@ -199,9 +198,26 @@ export default function App() {
       ) : (
         <>
           <section className="panel period-bar">
-            <div>
-              <p className="period-label">Viendo periodo</p>
-              <p className="period-value">{resolvedPeriod}</p>
+            <div className="period-header">
+              <div>
+                <p className="period-label">Viendo periodo</p>
+                <p className="period-value">{resolvedPeriod}</p>
+              </div>
+
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => {
+                  const month = currentMonth();
+                  const { year, month: currentMonthValue } = splitMonth(month);
+                  setDraftYear(year);
+                  setDraftMonth(currentMonthValue);
+                  applyMonth(month);
+                }}
+                disabled={loading || periodLoading || isViewingCurrentPeriod}
+              >
+                Mes actual
+              </button>
             </div>
 
             <div className="period-actions">
@@ -237,20 +253,6 @@ export default function App() {
                   ))}
                 </select>
               </label>
-              <button
-                type="button"
-                className="secondary"
-                onClick={() => {
-                  const month = currentMonth();
-                  const { year, month: currentMonthValue } = splitMonth(month);
-                  setDraftYear(year);
-                  setDraftMonth(currentMonthValue);
-                  applyMonth(month);
-                }}
-                disabled={loading || periodLoading || isShowingCurrentSelection}
-              >
-                Mes actual
-              </button>
               <button
                 type="button"
                 onClick={() => commitDraftPeriod()}
