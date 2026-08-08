@@ -21,6 +21,7 @@ function currentMonth() {
 export default function App() {
   const [expenses, setExpenses] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
+  const [draftMonth, setDraftMonth] = useState(currentMonth());
   const [resolvedPeriod, setResolvedPeriod] = useState(currentMonth());
   const [summary, setSummary] = useState({
     totalGeneral: 0,
@@ -32,6 +33,7 @@ export default function App() {
   });
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [periodLoading, setPeriodLoading] = useState(false);
   const [slowWarning, setSlowWarning] = useState(false);
   const [error, setError] = useState('');
   const [selectedPerson, setSelectedPerson] = useState('Todos');
@@ -66,6 +68,18 @@ export default function App() {
     }
   }
 
+  async function applyMonth(nextMonth) {
+    if (!nextMonth || nextMonth === selectedMonth) return;
+
+    setSelectedMonth(nextMonth);
+    setPeriodLoading(true);
+    try {
+      await loadExpenses({ month: nextMonth });
+    } finally {
+      setPeriodLoading(false);
+    }
+  }
+
   useEffect(() => {
     let mounted = true;
     const slowTimer = setTimeout(() => {
@@ -84,11 +98,6 @@ export default function App() {
       clearTimeout(slowTimer);
     };
   }, []);
-
-  useEffect(() => {
-    if (initialLoading) return;
-    loadExpenses({ month: selectedMonth });
-  }, [selectedMonth]);
 
   async function handleDelete(id) {
     const confirmed = window.confirm('Se borrara el gasto. Deseas continuar?');
@@ -142,18 +151,29 @@ export default function App() {
                 Mes
                 <input
                   type="month"
-                  value={selectedMonth}
-                  onChange={(event) => setSelectedMonth(event.target.value)}
-                  disabled={loading}
+                  value={draftMonth}
+                  onChange={(event) => setDraftMonth(event.target.value)}
+                  disabled={loading || periodLoading}
                 />
               </label>
               <button
                 type="button"
                 className="secondary"
-                onClick={() => setSelectedMonth(currentMonth())}
-                disabled={loading || isCurrentMonth}
+                onClick={() => {
+                  const month = currentMonth();
+                  setDraftMonth(month);
+                  applyMonth(month);
+                }}
+                disabled={loading || periodLoading || isCurrentMonth}
               >
                 Mes actual
+              </button>
+              <button
+                type="button"
+                onClick={() => applyMonth(draftMonth)}
+                disabled={loading || periodLoading || draftMonth === selectedMonth}
+              >
+                Aplicar
               </button>
             </div>
           </section>
@@ -172,7 +192,7 @@ export default function App() {
 
           <ExpenseForm
             editingExpense={editingExpense}
-            disabled={loading}
+            disabled={loading || periodLoading}
             onSaved={async () => {
               await loadExpenses({ month: selectedMonth });
               setEditingExpense(null);
@@ -182,8 +202,12 @@ export default function App() {
 
           {error ? <p className="panel error">{error}</p> : null}
 
-          {loading ? (
-            <p className="panel">Actualizando gastos...</p>
+          {loading || periodLoading ? (
+            <section className="panel loading-screen loading-inline" role="status" aria-live="polite">
+              <div className="spinner" />
+              <p className="loading-title">Actualizando gastos...</p>
+              <p className="loading-hint">Estamos cargando el periodo seleccionado.</p>
+            </section>
           ) : (
             <ExpenseList
               expenses={expenses}
