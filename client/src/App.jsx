@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ExpenseForm from './components/ExpenseForm.jsx';
 import ExpenseList from './components/ExpenseList.jsx';
-import { deleteExpense, getExpenses } from './api.js';
+import { deleteExpense, getExpenses, getExpensesSummary } from './api.js';
 import './App.css';
 
 function formatArs(value) {
@@ -11,8 +11,25 @@ function formatArs(value) {
   }).format(value || 0);
 }
 
+function currentMonth() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
 export default function App() {
   const [expenses, setExpenses] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(currentMonth());
+  const [resolvedPeriod, setResolvedPeriod] = useState(currentMonth());
+  const [summary, setSummary] = useState({
+    totalGeneral: 0,
+    totalPorPersona: [
+      { person: 'Bicha', total: 0 },
+      { person: 'Bicho', total: 0 },
+      { person: 'Bicha y Bicho', total: 0 }
+    ]
+  });
   const [initialLoading, setInitialLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [slowWarning, setSlowWarning] = useState(false);
@@ -21,12 +38,27 @@ export default function App() {
   const [editingExpense, setEditingExpense] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
-  async function loadExpenses({ trackLoading = true } = {}) {
+  async function loadExpenses({ trackLoading = true, month = selectedMonth } = {}) {
     try {
       if (trackLoading) setLoading(true);
       setError('');
-      const data = await getExpenses();
-      setExpenses(Array.isArray(data) ? data : []);
+      const [expensesData, summaryData] = await Promise.all([
+        getExpenses(month),
+        getExpensesSummary(month)
+      ]);
+
+      setResolvedPeriod(expensesData?.period || month);
+      setExpenses(Array.isArray(expensesData?.expenses) ? expensesData.expenses : []);
+      setSummary({
+        totalGeneral: Number(summaryData?.totalGeneral || 0),
+        totalPorPersona: Array.isArray(summaryData?.totalPorPersona)
+          ? summaryData.totalPorPersona
+          : [
+              { person: 'Bicha', total: 0 },
+              { person: 'Bicho', total: 0 },
+              { person: 'Bicha y Bicho', total: 0 }
+            ]
+      });
     } catch (loadError) {
       setError(loadError.message || 'No se pudieron cargar los gastos.');
     } finally {
@@ -40,7 +72,7 @@ export default function App() {
       if (mounted) setSlowWarning(true);
     }, 4000);
 
-    loadExpenses({ trackLoading: false }).finally(() => {
+    loadExpenses({ trackLoading: false, month: selectedMonth }).finally(() => {
       if (!mounted) return;
       clearTimeout(slowTimer);
       setInitialLoading(false);
@@ -53,6 +85,11 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (initialLoading) return;
+    loadExpenses({ month: selectedMonth });
+  }, [selectedMonth]);
+
   async function handleDelete(id) {
     const confirmed = window.confirm('Se borrara el gasto. Deseas continuar?');
     if (!confirmed) return;
@@ -60,7 +97,7 @@ export default function App() {
     try {
       setDeletingId(id);
       await deleteExpense(id);
-      await loadExpenses();
+      await loadExpenses({ month: selectedMonth });
       if (editingExpense?.id === id) setEditingExpense(null);
     } catch (deleteError) {
       setError(deleteError.message || 'No se pudo borrar el gasto.');
@@ -69,19 +106,7 @@ export default function App() {
     }
   }
 
-  const totalGeneral = useMemo(
-    () => expenses.reduce((acc, item) => acc + Number(item.amount || 0), 0),
-    [expenses]
-  );
-
-  const totalPorPersona = useMemo(() => {
-    return ['Bicha', 'Bicho', 'Bicha y Bicho'].map((person) => ({
-      person,
-      total: expenses
-        .filter((item) => item.person === person)
-        .reduce((acc, item) => acc + Number(item.amount || 0), 0)
-    }));
-  }, [expenses]);
+  const isCurrentMonth = useMemo(() => selectedMonth === currentMonth(), [selectedMonth]);
 
   return (
     <main className="container">
@@ -106,11 +131,38 @@ export default function App() {
         </section>
       ) : (
         <>
+          <section className="panel period-bar">
+            <div>
+              <p className="period-label">Viendo periodo</p>
+              <p className="period-value">{resolvedPeriod}</p>
+            </div>
+
+            <div className="period-actions">
+              <label>
+                Mes
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(event) => setSelectedMonth(event.target.value)}
+                  disabled={loading}
+                />
+              </label>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => setSelectedMonth(currentMonth())}
+                disabled={loading || isCurrentMonth}
+              >
+                Mes actual
+              </button>
+            </div>
+          </section>
+
           <section className="panel totals">
             <h2>Resumen actual</h2>
-            <p className="big">Total general: {formatArs(totalGeneral)}</p>
+            <p className="big">Total general: {formatArs(summary.totalGeneral)}</p>
             <ul>
-              {totalPorPersona.map((item) => (
+              {summary.totalPorPersona.map((item) => (
                 <li key={item.person}>
                   {item.person}: {formatArs(item.total)}
                 </li>
@@ -122,7 +174,7 @@ export default function App() {
             editingExpense={editingExpense}
             disabled={loading}
             onSaved={async () => {
-              await loadExpenses();
+              await loadExpenses({ month: selectedMonth });
               setEditingExpense(null);
             }}
             onCancelEdit={() => setEditingExpense(null)}
@@ -136,6 +188,7 @@ export default function App() {
             <ExpenseList
               expenses={expenses}
               selectedPerson={selectedPerson}
+              period={resolvedPeriod}
               onSelectPerson={setSelectedPerson}
               onEdit={setEditingExpense}
               onDelete={handleDelete}

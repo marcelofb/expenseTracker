@@ -39,6 +39,21 @@ npm run dev
 - Header requerido: x-cron-secret: <CRON_SECRET>
 - Comportamiento: calcula mes anterior en America/Argentina/Buenos_Aires, arma total general y total por persona, y envia Telegram.
 
+## Comportamiento mensual de la app
+- Los gastos NO se borran al iniciar un nuevo mes.
+- La app mantiene historico completo en `expenses`.
+- La vista por defecto muestra solo el mes actual (por eso puede arrancar en cero al cambiar de mes).
+- Desde el selector de mes (`YYYY-MM`) se puede consultar cualquier mes anterior.
+- Los totales en pantalla (general y por persona) corresponden siempre al mes seleccionado.
+
+## Endpoints de consulta mensual
+- `GET /api/expenses`
+   - Sin query: devuelve gastos del mes actual.
+   - Con query: `GET /api/expenses?month=YYYY-MM` devuelve gastos del mes indicado.
+- `GET /api/expenses/summary`
+   - Sin query: resumen del mes actual.
+   - Con query: `GET /api/expenses/summary?month=YYYY-MM` devuelve total general y total por persona de ese mes.
+
 ## Programacion de cron mensual
 Configurar un cron externo para llamar el endpoint:
 - Frecuencia: 1 vez por mes

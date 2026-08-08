@@ -1,5 +1,11 @@
 const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001/api').replace(/\/$/, '');
 
+function withMonth(url, month) {
+  if (!month) return url;
+  const params = new URLSearchParams({ month });
+  return `${url}?${params.toString()}`;
+}
+
 async function parseResponse(response) {
   if (response.status === 204) return null;
 
@@ -11,8 +17,13 @@ async function parseResponse(response) {
   return data;
 }
 
-export async function getExpenses() {
-  const response = await fetch(`${API_URL}/expenses`);
+export async function getExpenses(month) {
+  const response = await fetch(withMonth(`${API_URL}/expenses`, month));
+  return parseResponse(response);
+}
+
+export async function getExpensesSummary(month) {
+  const response = await fetch(withMonth(`${API_URL}/expenses/summary`, month));
   return parseResponse(response);
 }
 

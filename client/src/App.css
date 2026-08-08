@@ -73,6 +73,35 @@
   color: var(--subtle);
 }
 
+.period-bar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.period-label {
+  margin: 0;
+  color: var(--subtle);
+  font-size: 0.9rem;
+}
+
+.period-value {
+  margin: 2px 0 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.period-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.period-actions label {
+  min-width: 180px;
+}
+
 h2 {
   margin-top: 0;
 }
@@ -208,6 +237,20 @@ button:disabled {
 @media (max-width: 640px) {
   .container {
     padding: 14px;
+  }
+
+  .period-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .period-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .period-actions label {
+    min-width: 0;
   }
 
   .expense-item {

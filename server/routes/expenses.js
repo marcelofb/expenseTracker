@@ -1,6 +1,6 @@
 import express from 'express';
 import { pool } from '../db/database.js';
-import { ALLOWED_PERSONS } from '../utils/constants.js';
+import { ALLOWED_PERSONS, ARG_TIMEZONE } from '../utils/constants.js';
 
 const router = express.Router();
 
@@ -40,15 +40,106 @@ function validateExpense(payload) {
   return errors;
 }
 
-router.get('/', async (_req, res) => {
+function getCurrentMonthInArg() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: ARG_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit'
+  });
+  const parts = formatter.formatToParts(now);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  return `${year}-${month}`;
+}
+
+function parseMonthInput(value) {
+  if (!value) return { ok: true, month: getCurrentMonthInArg() };
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(value)) {
+    return { ok: false, error: 'month must be in YYYY-MM format' };
+  }
+  return { ok: true, month: value };
+}
+
+function monthBoundsFromYYYYMM(month) {
+  const [yearStr, monthStr] = month.split('-');
+  const year = Number(yearStr);
+  const monthNumber = Number(monthStr);
+  const start = `${yearStr}-${monthStr}-01`;
+
+  const nextMonthDate = new Date(Date.UTC(year, monthNumber, 1));
+  const nextYear = nextMonthDate.getUTCFullYear();
+  const nextMonth = String(nextMonthDate.getUTCMonth() + 1).padStart(2, '0');
+  const end = `${nextYear}-${nextMonth}-01`;
+
+  return { start, end };
+}
+
+function initPersonTotals() {
+  return ALLOWED_PERSONS.map((person) => ({ person, total: 0 }));
+}
+
+router.get('/summary', async (req, res) => {
+  const parsedMonth = parseMonthInput(req.query.month);
+  if (!parsedMonth.ok) {
+    return res.status(400).json({ error: parsedMonth.error });
+  }
+
+  const { start, end } = monthBoundsFromYYYYMM(parsedMonth.month);
+
+  try {
+    const [totalResult, byPersonResult] = await Promise.all([
+      pool.query(
+        `SELECT COALESCE(SUM(amount), 0)::float8 AS total
+         FROM expenses
+         WHERE expense_date >= $1 AND expense_date < $2;`,
+        [start, end]
+      ),
+      pool.query(
+        `SELECT person, COALESCE(SUM(amount), 0)::float8 AS total
+         FROM expenses
+         WHERE expense_date >= $1 AND expense_date < $2
+         GROUP BY person;`,
+        [start, end]
+      )
+    ]);
+
+    const totalsMap = new Map(byPersonResult.rows.map((row) => [row.person, Number(row.total)]));
+    const totalPorPersona = initPersonTotals().map((item) => ({
+      person: item.person,
+      total: totalsMap.get(item.person) || 0
+    }));
+
+    return res.json({
+      period: parsedMonth.month,
+      totalGeneral: Number(totalResult.rows[0].total || 0),
+      totalPorPersona
+    });
+  } catch (error) {
+    console.error('Error fetching monthly summary:', error);
+    return res.status(500).json({ error: 'Failed to fetch expenses summary' });
+  }
+});
+
+router.get('/', async (req, res) => {
+  const parsedMonth = parseMonthInput(req.query.month);
+  if (!parsedMonth.ok) {
+    return res.status(400).json({ error: parsedMonth.error });
+  }
+
+  const { start, end } = monthBoundsFromYYYYMM(parsedMonth.month);
+
   try {
     const { rows } = await pool.query(
       `SELECT id, description, amount::float8 AS amount, expense_date, person, created_at, updated_at
        FROM expenses
+       WHERE expense_date >= $1 AND expense_date < $2
        ORDER BY expense_date DESC, created_at DESC;`
+      ,
+      [start, end]
     );
 
-    res.json(rows);
+    res.json({ period: parsedMonth.month, expenses: rows });
   } catch (error) {
     console.error('Error fetching expenses:', error);
     res.status(500).json({ error: 'Failed to fetch expenses' });

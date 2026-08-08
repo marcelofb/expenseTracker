@@ -10,6 +10,7 @@ function formatArs(value) {
 export default function ExpenseList({
   expenses,
   selectedPerson,
+  period,
   onSelectPerson,
   onEdit,
   onDelete,
@@ -21,7 +22,7 @@ export default function ExpenseList({
   return (
     <section className="panel">
       <div className="list-header">
-        <h2>Gastos</h2>
+        <h2>Gastos del periodo {period}</h2>
         <div className="chips">
           {PERSONS.map((person) => (
             <button
