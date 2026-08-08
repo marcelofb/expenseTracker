@@ -54,12 +54,9 @@ npm run dev
    - Sin query: resumen del mes actual.
    - Con query: `GET /api/expenses/summary?month=YYYY-MM` devuelve total general y total por persona de ese mes.
 
-## Programacion de cron mensual
-Configurar un cron externo para llamar el endpoint:
-- Frecuencia: 1 vez por mes
-- Momento: dia 1 a las 00:00 (Argentina)
-- Metodo: POST
-- Header: x-cron-secret
+## Programacion mensual
+La ejecucion mensual se resuelve con GitHub Actions (ver seccion de workflow mas abajo),
+no con un cron externo manual.
 
 ## Deploy (Render + Netlify)
 
