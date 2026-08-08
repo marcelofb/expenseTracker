@@ -33,6 +33,10 @@ function validateExpense(payload) {
     errors.push('expense_date must be in YYYY-MM-DD format');
   }
 
+  if (isValidDate(payload.expense_date) && payload.expense_date < `${getCurrentMonthInArg()}-01`) {
+    errors.push('expense_date must be within the current month');
+  }
+
   if (!ALLOWED_PERSONS.includes(payload.person)) {
     errors.push(`person must be one of: ${ALLOWED_PERSONS.join(', ')}`);
   }

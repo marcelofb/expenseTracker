@@ -7,6 +7,20 @@ function toToday() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function toCurrentMonthStart() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}-01`;
+}
+
+function isWithinCurrentMonth(value) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const currentMonthStart = toCurrentMonthStart();
+  const today = toToday();
+  return value >= currentMonthStart && value <= today;
+}
+
 export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, disabled = false }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -122,7 +136,22 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, dis
         <input
           type="date"
           value={expenseDate}
-          onChange={(event) => setExpenseDate(event.target.value)}
+          onChange={(event) => {
+            const nextDate = event.target.value;
+            if (!nextDate) {
+              setExpenseDate(nextDate);
+              return;
+            }
+
+            if (!isWithinCurrentMonth(nextDate)) {
+              setError('Solo se permiten gastos del mes actual.');
+              return;
+            }
+
+            setError('');
+            setExpenseDate(nextDate);
+          }}
+          min={toCurrentMonthStart()}
           max={toToday()}
           disabled={formDisabled}
           required
