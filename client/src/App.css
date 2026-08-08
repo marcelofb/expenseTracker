@@ -36,6 +36,8 @@
 
 .loading-inline {
   min-height: 180px;
+  border-style: dashed;
+  background: linear-gradient(180deg, rgba(15, 118, 110, 0.03), rgba(15, 118, 110, 0.01));
 }
 
 .spinner {
@@ -56,6 +58,16 @@
   margin: 0;
   color: var(--subtle);
   max-width: 420px;
+}
+
+.loading-inline .loading-hint {
+  max-width: 520px;
+}
+
+.loading-inline .spinner {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
 }
 
 @keyframes spin {

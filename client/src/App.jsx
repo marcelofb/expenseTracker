@@ -18,6 +18,10 @@ function currentMonth() {
   return `${year}-${month}`;
 }
 
+function nextPaint() {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
 export default function App() {
   const [expenses, setExpenses] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
@@ -74,6 +78,7 @@ export default function App() {
     setSelectedMonth(nextMonth);
     setPeriodLoading(true);
     try {
+      await nextPaint();
       await loadExpenses({ month: nextMonth });
     } finally {
       setPeriodLoading(false);
@@ -152,7 +157,11 @@ export default function App() {
                 <input
                   type="month"
                   value={draftMonth}
-                  onChange={(event) => setDraftMonth(event.target.value)}
+                  onChange={(event) => {
+                    const nextMonth = event.target.value;
+                    setDraftMonth(nextMonth);
+                    applyMonth(nextMonth);
+                  }}
                   disabled={loading || periodLoading}
                 />
               </label>
@@ -167,13 +176,6 @@ export default function App() {
                 disabled={loading || periodLoading || isCurrentMonth}
               >
                 Mes actual
-              </button>
-              <button
-                type="button"
-                onClick={() => applyMonth(draftMonth)}
-                disabled={loading || periodLoading || draftMonth === selectedMonth}
-              >
-                Aplicar
               </button>
             </div>
           </section>
