@@ -21,6 +21,10 @@ function isWithinCurrentMonth(value) {
   return value >= currentMonthStart && value <= today;
 }
 
+function isFutureDate(value) {
+  return value > toToday();
+}
+
 export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, disabled = false }) {
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
@@ -140,6 +144,11 @@ export default function ExpenseForm({ editingExpense, onSaved, onCancelEdit, dis
             const nextDate = event.target.value;
             if (!nextDate) {
               setExpenseDate(nextDate);
+              return;
+            }
+
+            if (isFutureDate(nextDate)) {
+              setError('No se permiten fechas futuras.');
               return;
             }
 

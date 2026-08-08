@@ -18,6 +18,21 @@ function isValidDate(value) {
   return !Number.isNaN(date.getTime());
 }
 
+function getCurrentDateInArg() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: ARG_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  const parts = formatter.formatToParts(now);
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
+  const day = parts.find((part) => part.type === 'day')?.value;
+  return `${year}-${month}-${day}`;
+}
+
 function validateExpense(payload) {
   const errors = [];
 
@@ -35,6 +50,10 @@ function validateExpense(payload) {
 
   if (isValidDate(payload.expense_date) && payload.expense_date < `${getCurrentMonthInArg()}-01`) {
     errors.push('expense_date must be within the current month');
+  }
+
+  if (isValidDate(payload.expense_date) && payload.expense_date > getCurrentDateInArg()) {
+    errors.push('expense_date cannot be in the future');
   }
 
   if (!ALLOWED_PERSONS.includes(payload.person)) {
