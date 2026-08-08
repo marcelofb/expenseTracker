@@ -40,6 +40,18 @@
   background: linear-gradient(180deg, rgba(15, 118, 110, 0.03), rgba(15, 118, 110, 0.01));
 }
 
+.loading-overlay {
+  position: fixed;
+  inset: 16px;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(2px);
+  border-color: rgba(15, 118, 110, 0.35);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
 .spinner {
   width: 32px;
   height: 32px;
@@ -68,6 +80,21 @@
   width: 40px;
   height: 40px;
   border-width: 4px;
+}
+
+.loading-overlay .loading-title {
+  font-size: 1.05rem;
+}
+
+.loading-overlay .loading-hint {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 640px) {
+  .loading-overlay {
+    inset: 12px;
+    align-content: center;
+  }
 }
 
 @keyframes spin {

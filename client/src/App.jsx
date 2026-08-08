@@ -22,10 +22,52 @@ function nextPaint() {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
+function splitMonth(value) {
+  const [year, month] = value.split('-');
+  return { year, month };
+}
+
+function buildMonth(year, month) {
+  if (!year || !month) return '';
+  return `${year}-${month}`;
+}
+
+function getMonthOptions() {
+  return [
+    { value: '01', label: 'Enero' },
+    { value: '02', label: 'Febrero' },
+    { value: '03', label: 'Marzo' },
+    { value: '04', label: 'Abril' },
+    { value: '05', label: 'Mayo' },
+    { value: '06', label: 'Junio' },
+    { value: '07', label: 'Julio' },
+    { value: '08', label: 'Agosto' },
+    { value: '09', label: 'Septiembre' },
+    { value: '10', label: 'Octubre' },
+    { value: '11', label: 'Noviembre' },
+    { value: '12', label: 'Diciembre' }
+  ];
+}
+
+function getYearOptions() {
+  const currentYear = new Date().getFullYear();
+  const startYear = 2020;
+  const endYear = currentYear + 1;
+  const years = [];
+
+  for (let year = endYear; year >= startYear; year -= 1) {
+    years.push(String(year));
+  }
+
+  return years;
+}
+
 export default function App() {
   const [expenses, setExpenses] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState(currentMonth());
-  const [draftMonth, setDraftMonth] = useState(currentMonth());
+  const initialPeriod = splitMonth(currentMonth());
+  const [draftYear, setDraftYear] = useState(initialPeriod.year);
+  const [draftMonth, setDraftMonth] = useState(initialPeriod.month);
   const [resolvedPeriod, setResolvedPeriod] = useState(currentMonth());
   const [summary, setSummary] = useState({
     totalGeneral: 0,
@@ -85,6 +127,12 @@ export default function App() {
     }
   }
 
+  async function commitDraftPeriod(nextYear = draftYear, nextMonth = draftMonth) {
+    const nextPeriod = buildMonth(nextYear, nextMonth);
+    if (!nextPeriod || nextPeriod === selectedMonth) return;
+    await applyMonth(nextPeriod);
+  }
+
   useEffect(() => {
     let mounted = true;
     const slowTimer = setTimeout(() => {
@@ -121,6 +169,11 @@ export default function App() {
   }
 
   const isCurrentMonth = useMemo(() => selectedMonth === currentMonth(), [selectedMonth]);
+  const monthOptions = useMemo(() => getMonthOptions(), []);
+  const yearOptions = useMemo(() => getYearOptions(), []);
+  const draftPeriod = buildMonth(draftYear, draftMonth);
+  const hasPendingSelection = draftPeriod && draftPeriod !== selectedMonth;
+  const isShowingCurrentSelection = draftPeriod === currentMonth();
 
   return (
     <main className="container">
@@ -153,29 +206,57 @@ export default function App() {
 
             <div className="period-actions">
               <label>
-                Mes
-                <input
-                  type="month"
-                  value={draftMonth}
+                Año
+                <select
+                  value={draftYear}
                   onChange={(event) => {
-                    const nextMonth = event.target.value;
-                    setDraftMonth(nextMonth);
-                    applyMonth(nextMonth);
+                    setDraftYear(event.target.value);
                   }}
                   disabled={loading || periodLoading}
-                />
+                >
+                  {yearOptions.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Mes
+                <select
+                  value={draftMonth}
+                  onChange={(event) => {
+                    setDraftMonth(event.target.value);
+                  }}
+                  disabled={loading || periodLoading}
+                >
+                  {monthOptions.map((month) => (
+                    <option key={month.value} value={month.value}>
+                      {month.label}
+                    </option>
+                  ))}
+                </select>
               </label>
               <button
                 type="button"
                 className="secondary"
                 onClick={() => {
                   const month = currentMonth();
-                  setDraftMonth(month);
+                  const { year, month: currentMonthValue } = splitMonth(month);
+                  setDraftYear(year);
+                  setDraftMonth(currentMonthValue);
                   applyMonth(month);
                 }}
-                disabled={loading || periodLoading || isCurrentMonth}
+                disabled={loading || periodLoading || isShowingCurrentSelection}
               >
                 Mes actual
+              </button>
+              <button
+                type="button"
+                onClick={() => commitDraftPeriod()}
+                disabled={loading || periodLoading || !hasPendingSelection}
+              >
+                Aplicar
               </button>
             </div>
           </section>
@@ -205,10 +286,10 @@ export default function App() {
           {error ? <p className="panel error">{error}</p> : null}
 
           {loading || periodLoading ? (
-            <section className="panel loading-screen loading-inline" role="status" aria-live="polite">
+            <section className="panel loading-screen loading-inline loading-overlay" role="status" aria-live="polite" aria-busy="true">
               <div className="spinner" />
               <p className="loading-title">Actualizando gastos...</p>
-              <p className="loading-hint">Estamos cargando el periodo seleccionado.</p>
+              <p className="loading-hint">Estamos cargando el periodo seleccionado. No cierres esta pantalla.</p>
             </section>
           ) : (
             <ExpenseList
