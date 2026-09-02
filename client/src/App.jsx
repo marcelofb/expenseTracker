@@ -11,10 +11,17 @@ function formatArs(value) {
   }).format(value || 0);
 }
 
+const ARG_TIMEZONE = 'America/Argentina/Buenos_Aires';
+
 function currentMonth() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: ARG_TIMEZONE,
+    year: 'numeric',
+    month: '2-digit'
+  });
+  const parts = formatter.formatToParts(new Date());
+  const year = parts.find((part) => part.type === 'year')?.value;
+  const month = parts.find((part) => part.type === 'month')?.value;
   return `${year}-${month}`;
 }
 
@@ -56,7 +63,7 @@ function getMonthOptions() {
 }
 
 function getYearOptions() {
-  const currentYear = new Date().getFullYear();
+  const currentYear = Number(currentMonth().slice(0, 4));
   const startYear = 2020;
   const endYear = currentYear + 1;
   const years = [];
